@@ -54,7 +54,9 @@ public class InternalStorageDataModel extends DataModel {
 
         final List<StorageConstraintsModel> constraints = (List<StorageConstraintsModel>) document.getRootElement().elements("binding").stream()
                 .map(element -> StorageConstraintsModel.deserialize((Element) element)).collect(Collectors.toList());
-
+        if (constraints.size()==0) {
+        	constraints.add(new StorageConstraintsModel(StorageConstraintsModel.ATTR, QueryType.SELECT));
+        }
         Preconditions.checkState(constraints.size() == 1, "Expected constraints.size() == 1, actual " + constraints.size());
 
         final StorageConstraintsModel constraintsModel = Iterables.getOnlyElement(constraints);

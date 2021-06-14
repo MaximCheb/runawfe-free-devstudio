@@ -229,7 +229,7 @@ public class BotTaskEditor extends EditorPart implements ISelectionListener, IRe
     	if(TypeName.equals(mainTypeName) || TypeName.equals("")||botTask.getVariableNames(false, null).stream().anyMatch(p->p.equals(TypeName)) ) {
     		return;
     	}
-    	if (botTask.getVariableNames(false, null).stream().anyMatch(p->p.equals(mainTypeName))){ // я не разобрался с фильтром
+    	if (botTask.getVariableNames(false, null).stream().anyMatch(p->p.equals(mainTypeName))){
     		mustClean = true;
     	}
     	Variable ResultVar = new Variable();
@@ -307,7 +307,7 @@ public class BotTaskEditor extends EditorPart implements ISelectionListener, IRe
         editParameterButton = null;
         deleteParameterButton = null;
         readDocxParametersButton = null;
-
+     
         for (Control control : composite.getChildren()) {
             control.dispose();
         }
@@ -419,13 +419,8 @@ public class BotTaskEditor extends EditorPart implements ISelectionListener, IRe
           public void widgetSelected(SelectionEvent e) {        	  	
 	            globalSectionDefinition = definitionFiles.get(combo.getSelectionIndex());
 	            botTask.setGlobalSectionFile(globalSectionDefinition);
-	            String resultName = botTask.getName();
-	      	  	IContainer resultContainer = botTaskFile.getParent();
-	      	  	ExportBotGS ExportBot = new ExportBotGS(globalSectionDefinition, resultName,botTaskFile.getParent().getFullPath(), resultContainer, true ); 
-		      	if(ExportBot.export()) {
-		      		AddFileAddress(globalSectionDefinition.getParent().getName()); 
-		      	}
-	            recreateView();
+	            AddFileAddress(globalSectionDefinition.getParent().getName());
+		      	recreateView();
           }
         });
           saveGlobalBotSectionButton = new Button(dynaComposite, SWT.NONE);
@@ -436,7 +431,7 @@ public class BotTaskEditor extends EditorPart implements ISelectionListener, IRe
                   
             	  String resultName = botTask.getName();
             	  IContainer resultContainer = botTaskFile.getParent();
-            	  ExportBotGS ExportBot = new ExportBotGS(globalSectionDefinition, resultName,botTaskFile.getParent().getFullPath(), resultContainer, true ); 
+            	  ExportBotGS ExportBot = new ExportBotGS(globalSectionDefinition,EmbeddedFileUtils.generateEmbeddedFileName(botTask, "glb"),botTaskFile.getParent().getFullPath(), resultContainer, true ); 
             	  if(ExportBot.export()) {
             		 AddFileAddress(globalSectionDefinition.getParent().getName()); 
             	  }
