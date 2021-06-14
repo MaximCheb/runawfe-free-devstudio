@@ -71,25 +71,7 @@ public class ExportBotGS {
 		try {
 			
 			ProcessDefinition definition =ProcessCache.getProcessDefinition(definitionFile);
-            IFolder processFolder = (IFolder) definitionFile.getParent();
-            
-//            int validationResult = ProcessDefinitionValidator.validateDefinition(definition);
-//            if (validationResult != 0) {
-//                Activator.getDefault().getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(ValidationErrorsView.ID);
-//                if (validationResult == 2) {
-//                    //setErrorMessage(Localization.getString("ExportParWizardPage.page.errorsExist"));
-//                	return false;
-//                }
-//            }
-//            for (SubprocessDefinition subprocessDefinition : definition.getEmbeddedSubprocesses().values()) {
-//                validationResult = ProcessDefinitionValidator.validateDefinition(subprocessDefinition);
-//                if (!exportToFile && validationResult != 0) {
-//                    if (validationResult == 2) {
-//                        //setErrorMessage(Localization.getString("ExportParWizardPage.page.errorsExistInEmbeddedSubprocess"));
-//                    	return false;
-//                    }
-//                }
-//            }
+            IFolder processFolder = (IFolder) definitionFile.getParent();           
             definition.getLanguage().getSerializer().validateProcessDefinitionXML(definitionFile);
             List<IFile> resourcesToExport = new ArrayList<IFile>();
             IResource[] members = processFolder.members();
@@ -105,7 +87,7 @@ public class ExportBotGS {
                 	PluginLogger.logError(Localization.getString("ExportParWizardPage.confirm.export.invalid.process"),null);
                     return false;
                 }                
-                String outputFileName ="."+IPath.SEPARATOR+"workspace"+botTaskFile.toOSString()+IPath.SEPARATOR+ fileName + ".glb";
+                String outputFileName ="."+IPath.SEPARATOR+"workspace"+botTaskFile.toOSString()+IPath.SEPARATOR+ fileName;
                 new ParExportOperation(resourcesToExport, new FileOutputStream(outputFileName)).run(null);
                
                 

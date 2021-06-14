@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -87,6 +88,22 @@ public class BotImportCommand extends BotSyncCommand {
 
     private String cleanBotName(String botName) {
         return botName == null ? null : botName.replaceAll(Pattern.quote(".bot"), "");
+    }
+    
+    private void importGlobalSection(InputStream inputStream, String BotName){
+    	try {
+			Map<String, byte[]> files = IOUtils.getArchiveFiles(inputStream, true);
+			for(Entry<String, byte[]> ckfile : files.entrySet()) {
+				if(ckfile.getKey().endsWith("glb")) {
+					ckfile.getValue();
+					DeployBotGS deployGlobal = new DeployBotGS();
+					deployGlobal.deploy(ckfile.getKey().split(".")[0], BotName, ckfile.getValue());
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     private void validate() {

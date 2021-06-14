@@ -36,6 +36,7 @@ import ru.runa.gpd.lang.model.VariableUserType;
 import ru.runa.gpd.lang.model.VariableUserTypeNameAware;
 import ru.runa.gpd.lang.par.VariablesXmlContentProvider;
 import ru.runa.gpd.office.FilesSupplierMode;
+import ru.runa.gpd.office.InputOutputComposite;
 import ru.runa.gpd.office.Messages;
 import ru.runa.gpd.office.store.externalstorage.ConstraintsCompositeBuilder;
 import ru.runa.gpd.office.store.externalstorage.DeleteBotConstraintsComposite;
@@ -52,11 +53,15 @@ import ru.runa.gpd.office.store.externalstorage.VariableProvider;
 import ru.runa.gpd.ui.custom.SwtUtils;
 import ru.runa.gpd.util.EmbeddedFileUtils;
 import ru.runa.gpd.util.XmlUtil;
+import ru.runa.wfe.definition.IFileDataProvider;
 
 public class InternalStorageOperationHandlerCellEditorProvider extends XmlBasedConstructorProvider<InternalStorageDataModel> {
     public static final String INTERNAL_STORAGE_DATASOURCE_PATH = "datasource:InternalStorage";
     public static final String INTERNAL_STORAGE_GLOBALSECTION_PATH = "datasource:";
     private Delegable delegable;
+    protected FilesSupplierMode getMode() {
+		return FilesSupplierMode.BOTH;
+	}
     private ProcessDefinition  definition;
     @Override
     public void onDelete(Delegable delegable) {
@@ -156,6 +161,9 @@ public class InternalStorageOperationHandlerCellEditorProvider extends XmlBasedC
                 : ((GraphElement) delegable);
         if (delegable instanceof GraphElementAware) {
             model.setMode(FilesSupplierMode.IN);
+        }
+        if(model.constraints.size() == 0) {
+        	model.constraints.add(new StorageConstraintsModel(StorageConstraintsModel.ATTR, QueryType.SELECT));
         }
         model.validate(graphElement, errors);
         return super.validateModel(delegable, model, errors);
@@ -356,7 +364,7 @@ public class InternalStorageOperationHandlerCellEditorProvider extends XmlBasedC
             super(parent, delegable, model);
             this.globalSectionDefinition = GlobalSection;             
             this.variableProvider = new ProcessDefinitionVariableProvider(GlobalSection);
-            model.getInOutModel().inputPath = INTERNAL_STORAGE_GLOBALSECTION_PATH;
+            model.getInOutModel().inputPath = "globalfile://"+EmbeddedFileUtils.generateEmbeddedFileName(delegable, "glb");
             model.getInOutModel().inputVariable = GlobalSection.getName();
             setLayout(new GridLayout(2, false));
         }
@@ -374,7 +382,7 @@ public class InternalStorageOperationHandlerCellEditorProvider extends XmlBasedC
             for (Control control : getChildren()) {
                 control.dispose();
             }
-            model.getInOutModel().inputPath = INTERNAL_STORAGE_GLOBALSECTION_PATH+variableUserTypeInfo.variableTypeName;
+            
             if (constraintsModel.getSheetName() != null && !constraintsModel.getSheetName().isEmpty()) {
                 final VariableUserType userType = variableProvider.getUserType(constraintsModel.getSheetName());
                 variableUserTypeInfo.setVariableTypeName(userType != null ? userType.getName() : "");
@@ -402,8 +410,8 @@ public class InternalStorageOperationHandlerCellEditorProvider extends XmlBasedC
                 //constraintsCompositeBuilder.clearConstraints();
                 new Label(this, SWT.NONE);
                 constraintsCompositeBuilder.build();
-            }
-            
+            }            
+            //new ChooseStringOrFile(this, model.getInOutModel(), delegable, ".par", FilesSupplierMode.IN, null);
             ((ScrolledComposite) getParent()).setMinSize(computeSize(getSize().x, SWT.DEFAULT));
             String configText = delegable.getDelegationConfiguration();        	
             this.layout(true, true);
@@ -419,7 +427,7 @@ public class InternalStorageOperationHandlerCellEditorProvider extends XmlBasedC
                 Preconditions.checkState(model.constraints.size() == 1, "Expected model.constraints.size() == 1, actual " + model.constraints.size());
                 constraintsModel = Iterables.getOnlyElement(model.constraints);
             } else {
-                constraintsModel = new StorageConstraintsModel(StorageConstraintsModel.ATTR, QueryType.SELECT);
+                constraintsModel = new StorageConstraintsModel(StorageConstraintsModel.ATTR, QueryType.INSERT);
                 model.constraints.add(constraintsModel);
             }
         }
@@ -432,9 +440,10 @@ public class InternalStorageOperationHandlerCellEditorProvider extends XmlBasedC
                             variableUserTypeInfo.getVariableTypeName());
                     break;
                 case SELECT:
+                	model.setMode(FilesSupplierMode.BOTH);
                     constraintsCompositeBuilder = new PredicateBotCompositeDelegateBuilder(this, SWT.NONE, constraintsModel, variableProvider,
                             variableUserTypeInfo.getVariableTypeName(), new SelectBotConstraintsComposite(this, SWT.NONE, constraintsModel,
-                                    variableProvider, variableUserTypeInfo.getVariableTypeName()),delegable);
+                                    variableProvider, variableUserTypeInfo.getVariableTypeName(),model.inOutModel, delegable),delegable);
                     break;
                 case UPDATE:
                     constraintsCompositeBuilder = new PredicateBotCompositeDelegateBuilder(this, SWT.NONE, constraintsModel, variableProvider,
@@ -473,6 +482,9 @@ public class InternalStorageOperationHandlerCellEditorProvider extends XmlBasedC
             }));			
             if(dataTypeName != null) {
             	combo.setText(dataTypeName);
+            }
+            if(!variableUserTypeInfo.getVariableTypeName().equals("")) {
+            	combo.setText(variableUserTypeInfo.getVariableTypeName());
             }
         }
         private void addActionCombo() {
