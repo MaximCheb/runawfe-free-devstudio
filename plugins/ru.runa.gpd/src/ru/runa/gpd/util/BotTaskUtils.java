@@ -186,8 +186,14 @@ public class BotTaskUtils {
         }
         if (newConfiguration != null) {
             // #871
-            String newConfigurationHash = newConfiguration.replaceAll(" ", "").replaceAll("\n", "");
-            String oldConfigurationHash = botTaskLink.getDelegationConfiguration().replaceAll(" ", "").replaceAll("\n", "");
+            String newConfigurationHash = newConfiguration.replaceAll(" ", "").replaceAll("\n", "");            
+            String oldConfigurationHash = botTaskLink.getDelegationConfiguration();
+            if(oldConfigurationHash==null) {
+            	botTaskLink.setDelegationConfiguration(newConfiguration);
+            	taskState.setDirty();
+            	return;
+            }
+            oldConfigurationHash = botTaskLink.getDelegationConfiguration().replaceAll(" ", "").replaceAll("\n", "");
             if (!newConfigurationHash.equals(oldConfigurationHash)) {
                 botTaskLink.setDelegationConfiguration(newConfiguration);
                 taskState.setDirty();

@@ -30,11 +30,8 @@ import com.google.common.collect.Lists;
 public class BotTaskLink implements Delegable {
     private String botTaskName;
     private String delegationClassName;
-    private String delegationConfiguration = "";
-    private String botName;
+    private String delegationConfiguration;
     private TaskState taskState;
-    private String Filename;
-    private final String xmlHeader = "<?xml version=\"1.0\" encoding=\"UTF-8\"?> \n \n";
     private final String  InternalStorageClassName = "ru.runa.wfe.office.storage.handler.InternalStorageHandler";
    
     /**
@@ -89,40 +86,36 @@ public class BotTaskLink implements Delegable {
         if (taskState == null) {
         	return Lists.newArrayList();
         }
-//        if (delegationClassName.equals(InternalStorageClassName)&&checkFormat(typeClassNameFilters) ) {
-//        	List<String> variablesNames = new ArrayList<String>();
-//        	List<Variable>  typeAttributes = getGlobalSection();
-//        	if (typeAttributes == null) {
-//        		return taskState.getProcessDefinition().getVariableNames(includeSwimlanes, typeClassNameFilters);
-//        	}
-//        	for(Variable variable : taskState.getProcessDefinition().getVariables(true, includeSwimlanes, typeClassNameFilters)) {
-//        			if(variable.getUserType().getAttributes().equals(typeAttributes)) {
-//        				variablesNames.add(variable.getName());
-//        			}
-//        	}
-//        	return variablesNames;
-//        }
+        if (delegationClassName.equals(InternalStorageClassName)&&checkFormat(typeClassNameFilters) ) {
+        	List<String> variablesNames = new ArrayList<String>();
+        	List<Variable>  typeAttributes = getGlobalSectionAttr();
+        	if (typeAttributes == null) {
+        		return taskState.getProcessDefinition().getVariableNames(includeSwimlanes, typeClassNameFilters);
+        	}
+        	for(Variable variable : taskState.getProcessDefinition().getVariables(true, includeSwimlanes, typeClassNameFilters)) {
+        			if(variable.getUserType().getAttributes().equals(typeAttributes)) {
+        				variablesNames.add(variable.getName());
+        			}
+        	}
+        	return variablesNames;
+        }
         return taskState.getProcessDefinition().getVariableNames(includeSwimlanes, typeClassNameFilters);
         
     }
-//    public List<Variable> getGlobalSection() {
-//    	
-//    	BotTask botTask = BotCache.getBotTask(taskState.getSwimlaneBotName(), botTaskName);
-//    	
-//    	String xmmText = botTask.getDelegationConfiguration();
-//    	if(!XmlUtil.isXml(xmmText)) {
-//    		return null;
-//    	}
-//    	IFile globalSection =  botTask.getGlobalSectionFile();
-//    	Document doc = XmlUtil.parseWithoutValidation(xmmText);
-//    	Element root = doc.getRootElement();
-//    	String typeName = root.element("binding").attributeValue("variable");
-//    	Variable variable = ProcessCache.getProcessDefinition(globalSection).getVariableByName(typeName);
-//		if (variable.getUserType().equals(null)) {
-//			return variable.getUserType().getAttributes() ;
-//		}
-//		return null;
-//    }
+    public List<Variable> getGlobalSectionAttr() {    	
+    	BotTask botTask = BotCache.getBotTask(taskState.getSwimlaneBotName(), botTaskName);    	
+    	String xmmText = botTask.getDelegationConfiguration();
+    	if(!XmlUtil.isXml(xmmText)) {
+    		return null;
+    	}    	 	
+    	Document doc = XmlUtil.parseWithoutValidation(xmmText);
+    	Element root = doc.getRootElement();
+    	String typeName = root.element("binding").attributeValue("variable");
+    	String globalSectionName = root.element("input").attributeValue("variable");    	
+    	ProcessDefinition ReturnGlobalSection = ProcessCache.getAllProcessDefinitions().stream().filter(p->p.getName()
+    			.equals(globalSectionName)).findFirst().get(); 
+    	return ReturnGlobalSection.getVariableByName(typeName).getUserType().getAttributes();
+    }
     private boolean checkFormat(String... typeClassNameFilters) {
     	for(String format : typeClassNameFilters) {
     		if("ru.runa.wfe.var.UserTypeMap".equals(format)) {
@@ -132,6 +125,7 @@ public class BotTaskLink implements Delegable {
     	return false;
     }
     public BotTaskLink getCopy(TaskState taskState) {
+    	PluginLogger.logError(delegationConfiguration, null);
         BotTaskLink copy = new BotTaskLink();
         copy.setBotTaskName(botTaskName);
         copy.setDelegationClassName(delegationClassName);
